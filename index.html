@@ -1,82 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Stable A-Frame -->
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 
-  <!-- AFRAME -->
-  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-
-  <!-- AR -->
-  <script src="./aframe-ar-main/dist/aframe-ar.min.js"></script>
-
-  <title>AR Jet Placement</title>
+    <!-- Local aframe-ar -->
+    <script src="./aframe-ar-main/dist/aframe-ar.min.js"></script>
+    <title>MarkLess</title>
 </head>
-
 <body>
+    <script>
+      function showMessage(message){
+        let hud = document.querySelector("#hud");
+        hud.setAttribute('value', message);
+      }
 
-<script>
-AFRAME.registerComponent('ar-placement', {
-  init: function () {
-    this.camera = document.querySelector("#cam");
-    this.reticle = document.querySelector("#reticle");
-    this.model = document.querySelector("#jet");
-  },
+        AFRAME.registerComponent('ar-logic',{
+            init: function(){
+                showMessage('ar-logic running');
+            },
+            tick : function(){
+              let cam = document.querySelector("#cam");
+              if(!cam){return;}
+              showMessage('cam detected');
+              let collision = cam.components.raycaster.getIntersection(this.el);
+              if(!collision){return;}
+              showMessage('Occured collision' + collision.point.x.toFixed(2) + " " + collision.point.z.toFixed(2));
+              let circle = document.querySelector("#circle");
+              circle.setAttribute('position', collision.point);
+            }
+        });
 
-  tick: function () {
-    if (!this.camera) return;
+        window.addEventListener('touchstart', function(){
+          let box = document.querySelector("#box");
+          let circle = document.querySelector("#circle");
+          let pos = circle.getAttribute('position');
 
-    // Get camera direction
-    let direction = new THREE.Vector3();
-    this.camera.object3D.getWorldDirection(direction);
+          box.setAttribute('position', pos);
+        });
 
-    // Position reticle in front of camera (simulate ground detection)
-    let pos = this.camera.object3D.position.clone();
-    direction.multiplyScalar(2); // distance forward
-    pos.add(direction);
+    </script>
 
-    // Force Y = 0 (ground level)
-    pos.y = 0;
 
-    this.reticle.setAttribute("position", pos);
-  }
-});
-
-// Tap to place model
-window.addEventListener("click", function () {
-  let reticle = document.querySelector("#reticle");
-  let model = document.querySelector("#jet");
-
-  let pos = reticle.getAttribute("position");
-
-  model.setAttribute("position", pos);
-  model.setAttribute("visible", true);
-});
-</script>
-
-<a-scene ar ar-placement>
-
-  <!-- CAMERA -->
-  <a-camera id="cam"></a-camera>
-
-  <!-- RETICLE (ground indicator) -->
-  <a-ring
-    id="reticle"
-    rotation="-90 0 0"
-    radius-inner="0.1"
-    radius-outer="0.12"
-    color="green">
-  </a-ring>
-
-  <!-- YOUR JET MODEL -->
-  <a-entity
-    id="jet"
-    gltf-model="jet.glb"
-    scale="0.5 0.5 0.5"
-    visible="false">
-  </a-entity>
-
-</a-scene>
-
+    <a-scene ar ar-logic>
+        <a-camera id="cam" ar-raycaster raycaster="objects:none;">
+          <a-text id="hud" 
+            value="Summa Text" 
+            position="0 -0.1 -0.25"
+            align="center"
+            wrap-count="800"
+          ></a-text>
+        </a-camera>
+    
+        <a-ring
+          id="circle"
+          rotation="-90 0 0"
+          radius-inner="0.07"
+          radius-outer="0.08">
+        </a-ring>
+    
+        <!-- <a-box id="box" position="0 0 -1" color="red" scale="0.2 0.2 0.2"></a-box> -->
+        <a-gltf-model id="box"
+        src="jet.glb"
+        scale="1000 1000 1000"
+        position="0 0 0"
+      ></a-gltf-model>
+    
+    </a-scene>
 </body>
 </html>
