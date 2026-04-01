@@ -1,1 +1,80 @@
-<!DOCTYPE html> <html> <head> <meta charset="utf-8"> <title>Jet View - Right Side</title> <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script> <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script> </head> <body> <a-scene renderer="colorManagement: true; physicallyCorrectLights: true;"> <a-assets> <a-asset-item id="jet-model" src="jet.glb"></a-asset-item> </a-assets> <a-sky color="#AAB8C2"></a-sky> <a-cylinder position="0 -0.5 0" radius="30" height="0.1" color="#FFFFFF"> </a-cylinder> <a-light type="directional" intensity="1.5" position="10 10 5"></a-light> <a-light type="ambient" intensity="0.7"></a-light> <a-entity id="jet" gltf-model="#jet-model" position="0 0.5 0" scale="1 1 1" rotation="0 0 0"> </a-entity> <a-entity id="rig" position="12 1.6 0" rotation="0 90 0"> <a-camera look-controls wasd-controls></a-camera> </a-entity> </a-scene> </body> </html>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>AR Jet Placement</title>
+
+  <!-- AFRAME -->
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+
+  <!-- AR -->
+  <script src="./aframe-ar-main/dist/aframe-ar.min.js"></script>
+</head>
+
+<body>
+
+<script>
+// Reticle movement logic
+AFRAME.registerComponent('ar-placement', {
+  tick: function () {
+    let cam = document.querySelector("#cam");
+    let reticle = document.querySelector("#reticle");
+
+    if (!cam) return;
+
+    let direction = new THREE.Vector3();
+    cam.object3D.getWorldDirection(direction);
+
+    let pos = cam.object3D.position.clone();
+    direction.multiplyScalar(2); // distance from camera
+    pos.add(direction);
+
+    pos.y = 0; // ground level
+
+    reticle.setAttribute("position", pos);
+  }
+});
+
+// Tap to place jet
+window.addEventListener("click", function () {
+  let reticle = document.querySelector("#reticle");
+  let jet = document.querySelector("#jet");
+
+  let pos = reticle.getAttribute("position");
+
+  jet.setAttribute("position", pos);
+  jet.setAttribute("visible", true);
+});
+</script>
+
+<a-scene ar ar-placement renderer="colorManagement: true; physicallyCorrectLights: true;">
+
+  <!-- CAMERA -->
+  <a-camera id="cam"></a-camera>
+
+  <!-- LIGHTS -->
+  <a-light type="directional" intensity="1.5" position="10 10 5"></a-light>
+  <a-light type="ambient" intensity="0.7"></a-light>
+
+  <!-- RETICLE -->
+  <a-ring
+    id="reticle"
+    rotation="-90 0 0"
+    radius-inner="0.1"
+    radius-outer="0.12"
+    color="green">
+  </a-ring>
+
+  <!-- JET MODEL -->
+  <a-entity
+    id="jet"
+    gltf-model="jet.glb"
+    position="0 0 0"
+    scale="0.5 0.5 0.5"
+    visible="false">
+  </a-entity>
+
+</a-scene>
+
+</body>
+</html>
