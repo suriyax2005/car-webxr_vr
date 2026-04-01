@@ -1,43 +1,82 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Jet View - Right Side</title>
-  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- AFRAME -->
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+
+  <!-- AR -->
+  <script src="./aframe-ar-main/dist/aframe-ar.min.js"></script>
+
+  <title>AR Jet Placement</title>
 </head>
 
 <body>
 
-  <a-scene renderer="colorManagement: true; physicallyCorrectLights: true;">
-    
-    <a-assets>
-      <a-asset-item id="jet-model" src="jet.glb"></a-asset-item>
-    </a-assets>
+<script>
+AFRAME.registerComponent('ar-placement', {
+  init: function () {
+    this.camera = document.querySelector("#cam");
+    this.reticle = document.querySelector("#reticle");
+    this.model = document.querySelector("#jet");
+  },
 
-    <a-sky color="#AAB8C2"></a-sky>
-    <a-cylinder 
-      position="0 -0.5 0" 
-      radius="30" 
-      height="0.1" 
-      color="#FFFFFF">
-    </a-cylinder>
+  tick: function () {
+    if (!this.camera) return;
 
-    <a-light type="directional" intensity="1.5" position="10 10 5"></a-light>
-    <a-light type="ambient" intensity="0.7"></a-light>
+    // Get camera direction
+    let direction = new THREE.Vector3();
+    this.camera.object3D.getWorldDirection(direction);
 
-    <a-entity
-      id="jet"
-      gltf-model="#jet-model"
-      position="0 0.5 0"
-      scale="1 1 1"
-      rotation="0 0 0"> </a-entity>
+    // Position reticle in front of camera (simulate ground detection)
+    let pos = this.camera.object3D.position.clone();
+    direction.multiplyScalar(2); // distance forward
+    pos.add(direction);
 
-    <a-entity id="rig" position="12 1.6 0" rotation="0 90 0">
-      <a-camera look-controls wasd-controls></a-camera>
-    </a-entity>
+    // Force Y = 0 (ground level)
+    pos.y = 0;
 
-  </a-scene>
+    this.reticle.setAttribute("position", pos);
+  }
+});
+
+// Tap to place model
+window.addEventListener("click", function () {
+  let reticle = document.querySelector("#reticle");
+  let model = document.querySelector("#jet");
+
+  let pos = reticle.getAttribute("position");
+
+  model.setAttribute("position", pos);
+  model.setAttribute("visible", true);
+});
+</script>
+
+<a-scene ar ar-placement>
+
+  <!-- CAMERA -->
+  <a-camera id="cam"></a-camera>
+
+  <!-- RETICLE (ground indicator) -->
+  <a-ring
+    id="reticle"
+    rotation="-90 0 0"
+    radius-inner="0.1"
+    radius-outer="0.12"
+    color="green">
+  </a-ring>
+
+  <!-- YOUR JET MODEL -->
+  <a-entity
+    id="jet"
+    gltf-model="jet.glb"
+    scale="0.5 0.5 0.5"
+    visible="false">
+  </a-entity>
+
+</a-scene>
 
 </body>
 </html>
