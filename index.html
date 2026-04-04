@@ -1,86 +1,69 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>WebXR AR + VR Model</title>
-
-  <!-- A-Frame -->
-  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-
-  <!-- WebXR AR Hit Test -->
-  <script src="https://cdn.jsdelivr.net/npm/aframe-ar-hit-test-component/dist/aframe-ar-hit-test-component.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <!-- Your Local aframe-ar -->
+  <script src="./aframe-ar-main/dist/aframe-ar.min.js"></script>
 </head>
-
 <body>
-
-<a-scene
-  vr-mode-ui="enabled: true"
-  renderer="logarithmicDepthBuffer: true;"
-  embedded
-  ar-hit-test="target: #reticle"
-  xrweb="allowedDevices: any"
->
-
-  <!-- Camera -->
-  <a-camera position="0 1.6 0"></a-camera>
-
-  <!-- Light -->
-  <a-light type="directional" intensity="1" position="1 3 2"></a-light>
-  <a-light type="ambient" intensity="0.5"></a-light>
-
-  <!-- Reticle (Ring for placement) -->
-  <a-entity
-    id="reticle"
-    geometry="primitive: ring; radiusInner: 0.05; radiusOuter: 0.07"
-    material="color: green; shader: flat"
-    rotation="-90 0 0"
-    visible="false">
-  </a-entity>
-
-  <!-- 3D Model -->
-  <a-entity
-    id="model"
-    gltf-model="jet.glb"
-    scale="0.5 0.5 0.5"
-    visible="false">
-  </a-entity>
-
-</a-scene>
-
-<script>
-AFRAME.registerComponent('place-on-tap', {
-  init: function () {
-    const scene = this.el.sceneEl;
-    const reticle = document.querySelector('#reticle');
-    const model = document.querySelector('#model');
-
-    scene.addEventListener('click', () => {
-      if (reticle.visible) {
-        const position = reticle.getAttribute('position');
-        model.setAttribute('position', position);
-        model.setAttribute('visible', true);
+  <script>
+    function showMessage(message){
+      let hud = document.querySelector("#hud")
+       if(hud){
+          hud.setAttribute('value', message);
+        }
+    }
+    AFRAME.registerComponent('ar-logic',{
+      init: function(){
+        showMessage('ar-logic is working')
+      },
+      tick: function(){
+        let cam= document.querySelector("cam");
+        if(!cam || !cam.components.raycaster){
+          return;
+        }
+        let intersection = cam.components.raycaster.getIntersection(document.querySelector("#circle"));
+        if(!intersection){
+          return;
+        }
+        showMessage('Collision detected' + intersection.point.x.toFixed(2) + " " + intersection.point.z.toFixed(2));
+        let circle = document.querySelector("#circle");
+        circle.setAttribute('postion', intersection.point);
       }
+
     });
-  }
-});
-
-document.querySelector('a-scene').setAttribute('place-on-tap', '');
-
-
-// Show reticle when surface detected
-AFRAME.registerComponent('reticle-handler', {
-  init: function () {
-    const reticle = document.querySelector('#reticle');
-
-    this.el.sceneEl.addEventListener('ar-hit-test-select', function () {
-      reticle.setAttribute('visible', true);
+    window.addEventListener('touchstart',function(){
+      let box= doucument.querySelector("#box");
+      let circle= document.querySelector("circle");
+      let pos= circle.getAttribute('position');
+      box.setAttribute('position',pos);
     });
-  }
-});
-
-document.querySelector('a-scene').setAttribute('reticle-handler', '');
-
-</script>
-
+  </script>
+  <a-scene ar ar-logic>
+    <a-camera id = "cam" raycaster = "objects:none">
+      <a-text id="hud"
+        value="poda"
+        position="0 -0.1 -0.25"
+        allign="center"
+        wrap-count="800"
+    ></a-text>
+    </a-camera>
+    <a-ring
+      id="circle"
+      rotation="-90 0 0"
+      inner-radius="0.01"
+      outer-radius="0.02"
+    ></a-ring>
+    <a-gltf id="box"
+      src="model.glb"
+      scale="5 5 5"
+      position="0 0 0"
+    ></a-gltf>
+    
+  </a-scene>
+  
 </body>
 </html>
