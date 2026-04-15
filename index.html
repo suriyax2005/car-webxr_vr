@@ -15,23 +15,23 @@
 
 <a-scene
   embedded
-  vr-mode-ui="enabled: true"
   renderer="colorManagement: true;"
-  xrweb="requiredFeatures: hit-test, local-floor"
+  vr-mode-ui="enabled: true"
+  webxr="requiredFeatures: hit-test,local-floor; optionalFeatures: dom-overlay;"
   ar-hit-test="target: #reticle"
 >
 
   <!-- Camera -->
   <a-camera position="0 1.6 0"></a-camera>
 
-  <!-- Lighting (VERY IMPORTANT for GLB visibility) -->
+  <!-- Lighting -->
   <a-light type="ambient" intensity="1"></a-light>
   <a-light type="directional" position="1 3 2" intensity="1"></a-light>
 
   <!-- Reticle -->
   <a-entity
     id="reticle"
-    geometry="primitive: ring; radiusInner: 0.06; radiusOuter: 0.08"
+    geometry="primitive: ring; radiusInner: 0.05; radiusOuter: 0.07"
     material="color: green"
     rotation="-90 0 0"
     visible="false">
@@ -40,7 +40,7 @@
   <!-- Model -->
   <a-entity
     id="model"
-    gltf-model="url(model.glb)"
+    gltf-model="model.glb"
     scale="0.3 0.3 0.3"
     rotation="0 180 0"
     visible="false">
@@ -53,12 +53,12 @@ const reticle = document.querySelector('#reticle');
 const model = document.querySelector('#model');
 const scene = document.querySelector('a-scene');
 
-// Show reticle when surface is detected
-scene.addEventListener('ar-hit-test', () => {
+// Show reticle when surface detected
+scene.addEventListener('ar-hit-test-start', () => {
   reticle.setAttribute('visible', true);
 });
 
-// Place model on tap
+// Place model on screen tap
 window.addEventListener('click', () => {
   if (reticle.getAttribute('visible')) {
     const pos = reticle.getAttribute('position');
@@ -67,13 +67,13 @@ window.addEventListener('click', () => {
   }
 });
 
-// DEBUG: Check if model loaded
+// Debug logs
 model.addEventListener('model-loaded', () => {
   console.log("✅ Model Loaded Successfully");
 });
 
-model.addEventListener('model-error', () => {
-  console.error("❌ Model Failed to Load");
+model.addEventListener('model-error', (e) => {
+  console.error("❌ Model Failed to Load", e);
 });
 </script>
 
